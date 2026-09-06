@@ -47,4 +47,16 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
