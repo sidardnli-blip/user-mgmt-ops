@@ -8,3 +8,5 @@ resources:
   limits:
     cpu: "0.5"
     memory: "512Mi"
+postgres:
+  storage: 1Gi
