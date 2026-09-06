@@ -16,3 +16,16 @@ secrets:
 
 config:
   springDatasourceUrl: "jdbc:postgresql://postgres:5432/postgres"
+  springDatasourceUsername: "postgres"
+  springJpaHibernateDdlAuto: "create"
+  jwtIssuer: "Spring"
+  jwtExpirationMillis: "86400000"
+  postgresDb: "postgres"
+  postgresUser: "postgres"
+  nextPublicApiUrl: "http://backend:8080"
+
+ingress:
+  host: localhost
+
+postgres:
+  storage: 1Gi
