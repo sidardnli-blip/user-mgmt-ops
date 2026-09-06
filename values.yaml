@@ -6,7 +6,7 @@ images:
   postgres: postgres:16-alpine
 
 replicaCount:
-  backend: sidardenli/user-mgmt-service:c3a42f9
+  backend: 1
   frontend: 1
 
 secrets:
@@ -16,16 +16,3 @@ secrets:
 
 config:
   springDatasourceUrl: "jdbc:postgresql://postgres:5432/postgres"
-  springDatasourceUsername: "postgres"
-  springJpaHibernateDdlAuto: "create"
-  jwtIssuer: "Spring"
-  jwtExpirationMillis: "86400000"
-  postgresDb: "postgres"
-  postgresUser: "postgres"
-  nextPublicApiUrl: "http://backend: sidardenli/user-mgmt-service:c3a42f9
-
-ingress:
-  host: localhost
-
-postgres:
-  storage: 1Gi
