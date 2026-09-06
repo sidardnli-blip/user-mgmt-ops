@@ -1,0 +1,31 @@
+namespace: user-mgmt
+
+images:
+  backend: sidardenli/user-mgmt-service:latest
+  frontend: sidardenli/auth_portal:latest
+  postgres: postgres:16-alpine
+
+replicaCount:
+  backend: 1
+  frontend: 1
+
+secrets:
+  springDatasourcePassword: "mysecretpassword"
+  postgresPassword: "mysecretpassword"
+  jwtSecret: "wIDAQABAkAzGlFARFau7K0b9FcEwIDAQABAkAzGlFARFau7K0b9FcEwIDAQABAkAzGlFARFau7K0b9FcE"
+
+config:
+  springDatasourceUrl: "jdbc:postgresql://postgres:5432/postgres"
+  springDatasourceUsername: "postgres"
+  springJpaHibernateDdlAuto: "create"
+  jwtIssuer: "Spring"
+  jwtExpirationMillis: "86400000"
+  postgresDb: "postgres"
+  postgresUser: "postgres"
+  nextPublicApiUrl: "http://backend:8080"
+
+ingress:
+  host: localhost
+
+postgres:
+  storage: 1Gi
