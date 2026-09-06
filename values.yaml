@@ -1,7 +1,7 @@
 namespace: user-mgmt
 
 images:
-  backend: sidardenli/user-mgmt-service:c3a42f9
+  backend: sidardenli/user-mgmt-service:5b725f5
   frontend: sidardenli/auth_portal:latest
   postgres: postgres:16-alpine
 
