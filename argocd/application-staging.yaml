@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: user-mgmt-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sidardnli-blip/user-mgmt-ops.git
+    targetRevision: main
+    path: .
+    helm:
+      valueFiles:
+        - values-staging.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: user-mgmt-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
