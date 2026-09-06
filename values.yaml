@@ -1,12 +1,12 @@
 namespace: user-mgmt
 
 images:
-  backend: sidardenli/user-mgmt-service:latest
+  backend: sidardenli/user-mgmt-service:c3a42f9
   frontend: sidardenli/auth_portal:latest
   postgres: postgres:16-alpine
 
 replicaCount:
-  backend: 1
+  backend: sidardenli/user-mgmt-service:c3a42f9
   frontend: 1
 
 secrets:
@@ -22,7 +22,7 @@ config:
   jwtExpirationMillis: "86400000"
   postgresDb: "postgres"
   postgresUser: "postgres"
-  nextPublicApiUrl: "http://backend:8080"
+  nextPublicApiUrl: "http://backend: sidardenli/user-mgmt-service:c3a42f9
 
 ingress:
   host: localhost
