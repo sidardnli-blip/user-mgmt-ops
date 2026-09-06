@@ -1,0 +1,10 @@
+namespace: user-mgmt-prod
+replicaCount:
+  backend: 2
+  frontend: 2
+ingress:
+  host: prod.localhost
+resources:
+  limits:
+    cpu: "1"
+    memory: "1Gi"
