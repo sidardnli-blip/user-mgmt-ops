@@ -1,17 +1,14 @@
 namespace: user-mgmt
-
 images:
   # Die beiden Tags werden von der GitHub-Actions-Pipeline automatisch gesetzt
-  backend: sidardenli/user-mgmt-service:e88e3c5
+  backend: sidardenli/user-mgmt-service:265ad61
   moduleService: sidardenli/module-service:238728e
   # Frontend wird manuell getaggt (kein :latest -> Kyverno Policy disallow-latest-tag)
   frontend: sidardenli/auth_portal:1.0.0
-
 replicaCount:
   backend: 1
   frontend: 1
   moduleService: 2
-
 # Aufgabe 6: Python Microservice
 moduleService:
   enabled: true
@@ -24,17 +21,14 @@ moduleService:
     limits:
       cpu: "500m"
       memory: "384Mi"
-
 # Aufgabe 4: Zugangsdaten der Managed Databases kommen aus Terraform
 # und liegen als Kubernetes Secret im Namespace (nicht im Git!).
 database:
   secretName: user-mgmt-db
 moduleServiceDatabase:
   secretName: module-service-db
-
 secrets:
   jwtSecret: "wIDAQABAkAzGlFARFau7K0b9FcEwIDAQABAkAzGlFARFau7K0b9FcEwIDAQABAkAzGlFARFau7K0b9FcE"
-
 config:
   springJpaHibernateDdlAuto: "update"
   springJpaShowSql: "false"
@@ -42,28 +36,23 @@ config:
   jwtExpirationMillis: "86400000"
   nextPublicApiUrl: "http://backend:8080"
   moduleServiceBaseUrl: "http://module-service:8000"
-
 ingress:
   host: user-mgmt.168.144.6.164.nip.io
   # Aufgabe 2: vordefinierte Lastverteilungsstrategie ueber den Ingress
   loadBalanceAlgorithm: round_robin
-
 # Aufgabe 1: ServiceMonitor fuer Prometheus
 monitoring:
   enabled: true
   scrapeInterval: 15s
   namespace: monitoring
-
 # Aufgabe 2: Namespace, aus dem k6 auf die Services zugreifen darf
 loadtest:
   namespace: loadtest
-
 hpa:
   backend:
     minReplicas: 1
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
-
 resources:
   backend:
     requests:
@@ -79,7 +68,6 @@ resources:
     limits:
       cpu: "400m"
       memory: "512Mi"
-
 quota:
   requestsCpu: "3"
   requestsMemory: 3Gi
