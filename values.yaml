@@ -8,9 +8,9 @@ images:
   frontend: sidardenli/auth_portal:1.0.0
 
 replicaCount:
-  backend: sidardenli/user-mgmt-service:e88e3c5
+  backend: 1
   frontend: 1
-  moduleService: sidardenli/module-service:238728e
+  moduleService: 2
 
 # Aufgabe 6: Python Microservice
 moduleService:
