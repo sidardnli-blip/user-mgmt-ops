@@ -1,0 +1,22 @@
+# Aufgabe 5: die ClusterPolicies liegen deklarativ im Ops Repository und
+# werden von ArgoCD ausgerollt. Kyverno selbst wird per Helm installiert.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sidardnli-blip/user-mgmt-ops.git
+    targetRevision: main
+    path: kyverno/policies
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: policy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

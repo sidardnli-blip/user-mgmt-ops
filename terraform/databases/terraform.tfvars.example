@@ -1,0 +1,6 @@
+# Kopieren nach terraform.tfvars. Token per Umgebungsvariable setzen:
+#   PowerShell:  $env:TF_VAR_do_token = "dop_v1_...."
+
+cluster_name  = "user-mgmt-cluster"
+region        = "fra1"
+database_size = "db-s-1vcpu-1gb"

@@ -1,0 +1,39 @@
+{{- if .Values.monitoring.enabled }}
+# Aufgabe 1: Prometheus holt die Applikationsmetriken des user_mgmt_service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: backend
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+    - port: management
+      path: /actuator/prometheus
+      interval: {{ .Values.monitoring.scrapeInterval }}
+{{- if .Values.moduleService.enabled }}
+---
+# Aufgabe 6: Telemetriedaten des module_service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: module-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: module-service
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: module-service
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.monitoring.scrapeInterval }}
+{{- end }}
+{{- end }}

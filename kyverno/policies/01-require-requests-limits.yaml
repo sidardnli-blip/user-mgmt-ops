@@ -1,0 +1,39 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-requests-limits
+  annotations:
+    policies.kyverno.io/title: Requests und Limits erforderlich
+    policies.kyverno.io/category: Betrieb
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Ohne Requests kann der Scheduler die Last nicht sinnvoll verteilen, ohne Limits
+      kann ein einzelner Pod die ganze Node ausbremsen. Ausserdem funktioniert der
+      HPA (Aufgabe 2) nur mit gesetzten CPU-Requests.
+spec:
+  background: true
+  rules:
+    - name: check-container-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - user-mgmt
+                - user-mgmt-*
+      validate:
+        failureAction: Enforce
+        message: >-
+          Jeder Container muss resources.requests.cpu/memory und
+          resources.limits.cpu/memory definieren.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"

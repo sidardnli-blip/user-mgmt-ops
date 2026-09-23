@@ -1,0 +1,130 @@
+# Aufgabe 1: Deklarative Konfiguration des kube-prometheus-stack
+# Installation:
+#   helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#     --namespace monitoring --create-namespace --version 91.5.0 -f monitoring/values.yaml
+
+# --- Prometheus ---------------------------------------------------------------
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+
+    # WICHTIG: ohne diese vier Zeilen wuerde Prometheus NUR die ServiceMonitors
+    # und Rules des eigenen Helm-Releases beachten und unsere eigenen ignorieren.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+    # Aufgabe 2: k6 schreibt seine Testergebnisse per Remote Write direkt hier rein
+    enableRemoteWriteReceiver: true
+
+    resources:
+      requests:
+        cpu: "150m"
+        memory: "600Mi"
+      limits:
+        memory: "1500Mi"
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: do-block-storage
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+# --- Alertmanager -------------------------------------------------------------
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "64Mi"
+      limits:
+        memory: "192Mi"
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ["alertname", "namespace"]
+      group_wait: 15s
+      group_interval: 1m
+      repeat_interval: 1h
+      # Default: alles Uebrige (z.B. Watchdog) wird verworfen
+      receiver: "null"
+      routes:
+        # Unsere eigenen Alerts tragen das Label team="user-mgmt"
+        - receiver: "user-mgmt-webhook"
+          matchers:
+            - team = "user-mgmt"
+    receivers:
+      - name: "null"
+      - name: "user-mgmt-webhook"
+        webhook_configs:
+          # TODO: eigene URL von https://webhook.site eintragen
+          - url: "https://webhook.site/00000000-0000-0000-0000-000000000000"
+            send_resolved: true
+
+# --- Grafana ------------------------------------------------------------------
+grafana:
+  enabled: true
+  defaultDashboardsTimezone: Europe/Zurich
+  # Passwort steht NICHT im Repo, sondern in einem vorher angelegten Secret:
+  #   kubectl create secret generic grafana-admin -n monitoring \
+  #     --from-literal=admin-user=admin --from-literal=admin-password=<PASSWORT>
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "160Mi"
+    limits:
+      memory: "400Mi"
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      # Dashboards duerfen in jedem Namespace liegen
+      searchNamespace: ALL
+
+# --- Komponenten, die es bei DigitalOcean (Managed Control Plane) nicht gibt ---
+# Ohne diese Zeilen laufen dauerhaft Alerts wie "KubeControllerManagerDown".
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "100Mi"
+    limits:
+      memory: "300Mi"
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "80Mi"
+    limits:
+      memory: "250Mi"
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "40Mi"
+    limits:
+      memory: "100Mi"

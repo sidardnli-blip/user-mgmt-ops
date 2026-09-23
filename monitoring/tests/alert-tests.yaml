@@ -1,0 +1,71 @@
+# Unit-Test fuer die Alert-Regeln (optional, aber ein starker Nachweis).
+# Ausfuehren mit:  promtool test rules monitoring/rules/alert-tests.yaml
+# (promtool ist Teil des Prometheus-Downloads: https://prometheus.io/download/)
+#
+# Die Regeln werden dafuer aus der PrometheusRule extrahiert, z.B. mit:
+#   kubectl get prometheusrule user-mgmt-service-rules -n monitoring -o jsonpath='{.spec}' > /tmp/rules.yaml
+rule_files:
+  - extracted-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # 20% Fehlerquote -> UserMgmtServiceHighErrorRate muss feuern
+  - interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{job="backend", namespace="user-mgmt", status="500", uri="/users"}'
+        values: "0+12x10"
+      - series: 'http_server_requests_seconds_count{job="backend", namespace="user-mgmt", status="200", uri="/users"}'
+        values: "0+48x10"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: UserMgmtServiceHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              team: user-mgmt
+              namespace: user-mgmt
+            exp_annotations:
+              summary: "user_mgmt_service liefert zu viele Serverfehler"
+              description: "Fehlerquote 20.0% (Schwelle 5%) im Namespace user-mgmt."
+
+  # Circuit Breaker offen -> ModuleAssignmentUnavailable muss feuern
+  - interval: 1m
+    input_series:
+      - series: 'resilience4j_circuitbreaker_state{job="backend", name="moduleService", state="open", namespace="user-mgmt", pod="backend-1"}'
+        values: "1x10"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: ModuleAssignmentUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              team: user-mgmt
+              job: backend
+              name: moduleService
+              state: open
+              namespace: user-mgmt
+              pod: backend-1
+            exp_annotations:
+              summary: "Modulzuweisung nicht moeglich (Circuit Breaker offen)"
+              description: "Der Circuit Breaker zum module_service ist offen. Namespace user-mgmt, Pod backend-1."
+
+  # Alles gruen -> kein Alert
+  - interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{job="backend", namespace="user-mgmt", status="200", uri="/users"}'
+        values: "0+60x10"
+      - series: 'resilience4j_circuitbreaker_state{job="backend", name="moduleService", state="open", namespace="user-mgmt", pod="backend-1"}'
+        values: "0x10"
+      - series: 'kube_deployment_status_replicas_available{namespace="user-mgmt", deployment="backend"}'
+        values: "2x10"
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: UserMgmtServiceHighErrorRate
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: ModuleAssignmentUnavailable
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: UserMgmtServiceNoAvailableReplicas
+        exp_alerts: []

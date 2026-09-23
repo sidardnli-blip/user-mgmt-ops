@@ -5,6 +5,9 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # Aufgabe 2: eingehende Requests werden per Round Robin auf alle
+    # verfuegbaren Backend-Replicas verteilt
+    nginx.ingress.kubernetes.io/load-balance: {{ .Values.ingress.loadBalanceAlgorithm | quote }}
 spec:
   ingressClassName: nginx
   rules:

@@ -2,11 +2,11 @@ namespace: user-mgmt-prod
 replicaCount:
   backend: 2
   frontend: 2
+  moduleService: 2
 ingress:
   host: prod.localhost
-resources:
-  limits:
-    cpu: "1"
-    memory: "1Gi"
-postgres:
-  storage: 5Gi
+hpa:
+  backend:
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70

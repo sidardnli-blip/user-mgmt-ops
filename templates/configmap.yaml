@@ -4,11 +4,11 @@ metadata:
   name: app-config
   namespace: {{ .Values.namespace }}
 data:
-  SPRING_DATASOURCE_URL: {{ .Values.config.springDatasourceUrl | quote }}
-  SPRING_DATASOURCE_USERNAME: {{ .Values.config.springDatasourceUsername | quote }}
+  # Datenbank-Zugangsdaten stehen bewusst NICHT hier, sondern im Secret
+  # {{ .Values.database.secretName }} (von Terraform aus der Managed Database befuellt).
   SPRING_JPA_HIBERNATE_DDL_AUTO: {{ .Values.config.springJpaHibernateDdlAuto | quote }}
+  SPRING_JPA_SHOW_SQL: {{ .Values.config.springJpaShowSql | quote }}
   JWT_ISSUER: {{ .Values.config.jwtIssuer | quote }}
   JWT_EXPIRATION_MILLIS: {{ .Values.config.jwtExpirationMillis | quote }}
-  POSTGRES_DB: {{ .Values.config.postgresDb | quote }}
-  POSTGRES_USER: {{ .Values.config.postgresUser | quote }}
   NEXT_PUBLIC_API_URL: {{ .Values.config.nextPublicApiUrl | quote }}
+  MODULE_SERVICE_BASE_URL: {{ .Values.config.moduleServiceBaseUrl | quote }}

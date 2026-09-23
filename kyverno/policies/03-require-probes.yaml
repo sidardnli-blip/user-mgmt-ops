@@ -1,0 +1,37 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes
+  annotations:
+    policies.kyverno.io/title: Liveness und Readiness Probe erforderlich
+    policies.kyverno.io/category: Betrieb
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Ohne Readiness Probe schickt der Service Requests an Pods, die noch gar nicht
+      bereit sind. Genau das wuerde beim Hochskalieren unter Last (Aufgabe 2) zu
+      Fehlern fuehren.
+spec:
+  background: true
+  rules:
+    - name: check-probes
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+              namespaces:
+                - user-mgmt
+                - user-mgmt-*
+      validate:
+        failureAction: Enforce
+        message: "Jeder Container braucht eine livenessProbe und eine readinessProbe."
+        pattern:
+          spec:
+            template:
+              spec:
+                containers:
+                  - livenessProbe:
+                      periodSeconds: ">0"
+                    readinessProbe:
+                      periodSeconds: ">0"

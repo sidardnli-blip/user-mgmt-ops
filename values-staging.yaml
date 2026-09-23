@@ -2,11 +2,11 @@ namespace: user-mgmt-staging
 replicaCount:
   backend: 1
   frontend: 1
+  moduleService: 1
 ingress:
   host: staging.localhost
-resources:
-  limits:
-    cpu: "0.5"
-    memory: "512Mi"
-postgres:
-  storage: 1Gi
+hpa:
+  backend:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70

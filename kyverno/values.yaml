@@ -1,0 +1,35 @@
+# Aufgabe 5: Kyverno wird per Helm im dedizierten Namespace "policy" installiert
+#   helm upgrade --install kyverno kyverno/kyverno \
+#     --namespace policy --create-namespace --version 3.9.1 -f kyverno/values.yaml
+
+admissionController:
+  replicas: 1
+  container:
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        memory: "384Mi"
+
+backgroundController:
+  replicas: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      memory: "256Mi"
+
+reportsController:
+  replicas: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      memory: "256Mi"
+
+# Cleanup Policies brauchen wir nicht -> spart Ressourcen auf dem kleinen Cluster
+cleanupController:
+  enabled: false

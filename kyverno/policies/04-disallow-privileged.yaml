@@ -1,0 +1,33 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+  annotations:
+    policies.kyverno.io/title: Keine privilegierten Container
+    policies.kyverno.io/category: Sicherheit
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Privilegierte Container und Privilege Escalation heben die Isolation zwischen
+      Container und Node auf. Ein kompromittierter Pod haette damit Zugriff auf den
+      ganzen Node.
+spec:
+  background: true
+  rules:
+    - name: check-privileged
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - user-mgmt
+                - user-mgmt-*
+      validate:
+        failureAction: Enforce
+        message: "privileged=true und allowPrivilegeEscalation=true sind nicht erlaubt."
+        pattern:
+          spec:
+            containers:
+              - =(securityContext):
+                  =(privileged): "false"
+                  =(allowPrivilegeEscalation): "false"

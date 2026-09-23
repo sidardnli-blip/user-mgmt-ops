@@ -1,0 +1,14 @@
+# Terraform State enthaelt Passwoerter -> gehoert NIE ins Repository
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+crash.*.log
+
+# Variablen-Dateien mit echten Werten (Token!) bleiben lokal
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Lock-File wird bewusst eingecheckt (reproduzierbare Provider-Versionen)
+!.terraform.lock.hcl

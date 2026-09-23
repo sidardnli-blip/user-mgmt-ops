@@ -1,0 +1,9 @@
+# Diese Ordner gehoeren zum Ops-Repo, sind aber NICHT Teil des Helm Charts
+argocd/
+monitoring/
+kyverno/
+k6/
+terraform/
+docs/
+.git/
+*.md

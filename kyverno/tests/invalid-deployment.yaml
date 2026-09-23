@@ -1,0 +1,31 @@
+# Aufgabe 5: Nachweis, dass das Policy Enforcement funktioniert.
+# Dieses Deployment verstoesst absichtlich gegen DREI Policies:
+#   1. require-requests-limits  -> keine resources definiert
+#   2. disallow-latest-tag      -> Image mit :latest
+#   3. require-probes           -> keine liveness/readiness Probe
+#   4. disallow-privileged      -> privileged: true
+#
+# Anwenden mit:  kubectl apply -f kyverno/tests/invalid-deployment.yaml
+# Erwartung: kubectl bricht mit "admission webhook ... denied the request" ab.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-test-invalid
+  namespace: user-mgmt
+  labels:
+    app: policy-test-invalid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-test-invalid
+  template:
+    metadata:
+      labels:
+        app: policy-test-invalid
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          securityContext:
+            privileged: true

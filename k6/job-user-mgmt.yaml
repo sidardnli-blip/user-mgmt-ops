@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-user-mgmt-load-test
+  namespace: loadtest
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: k6
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: k6
+          image: grafana/k6:1.8.1
+          args:
+            - "run"
+            - "--out"
+            - "experimental-prometheus-rw"
+            - "--tag"
+            - "testid=user-mgmt-load"
+            - "/scripts/user-mgmt-load-test.js"
+          env:
+            # Ziel: NGINX Ingress Controller im Cluster (Round Robin auf die Replicas)
+            - name: TARGET_URL
+              value: "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local"
+            # Muss zum host-Eintrag im Ingress passen (values.yaml -> ingress.host)
+            - name: TARGET_HOST
+              value: "user-mgmt.168.144.6.164.nip.io"
+            # Aufgabe 2: Testergebnisse landen direkt in Prometheus
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              value: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/write"
+            - name: K6_PROMETHEUS_RW_TREND_STATS
+              value: "p(95),p(99),avg,max"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+      volumes:
+        - name: scripts
+          configMap:
+            name: k6-scripts

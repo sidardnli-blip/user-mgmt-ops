@@ -1,0 +1,63 @@
+# ============================================================================
+# VORLAGE fuer die BEREINIGTE generated.tf (Aufgabe 3)
+#
+# Ablauf:
+#   1. terraform plan -generate-config-out=generated.tf
+#      -> Terraform schreibt eine generated.tf mit ALLEN Attributen des Clusters
+#   2. Diese Datei hier als Ersatz nehmen und die Werte, die bei dir in der
+#      generierten Datei stehen, in terraform.tfvars eintragen
+#   3. Datei umbenennen/kopieren nach generated.tf
+#
+# Was wurde gegenueber der automatisch erzeugten Datei bereinigt?
+#   - Attribute mit dem Wert null entfernt (z.B. kubeconfig_expire_seconds,
+#     destroy_all_associated_resources) -> Terraform nimmt ohnehin die Defaults
+#   - min_nodes/max_nodes im node_pool entfernt: DigitalOcean liefert dort 0,
+#     das laesst sich ohne auto_scale gar nicht anwenden
+#   - leere Blocks (z.B. amd_gpu_device_plugin, routing_agent, sso) entfernt
+#   - Computed-Attribute (id, urn, status, endpoint, ipv4_address, created_at,
+#     updated_at, kube_config, actual_node_count, nodes) entfernt - die kommen
+#     vom Provider, nicht aus der Konfiguration
+#   - cluster_subnet/service_subnet/vpc_uuid entfernt: das sind Optional+Computed
+#     Werte, die beim Import unveraendert aus der Cloud uebernommen werden
+#   - feste Werte durch Variablen ersetzt (Wiederverwendbarkeit)
+# ============================================================================
+
+resource "digitalocean_kubernetes_cluster" "main" {
+  name    = var.cluster_name
+  region  = var.region
+  version = var.kubernetes_version
+
+  auto_upgrade  = var.auto_upgrade
+  surge_upgrade = var.surge_upgrade
+  ha            = var.ha_control_plane
+  tags          = var.cluster_tags
+
+  node_pool {
+    name       = var.node_pool_name
+    size       = var.node_size
+    node_count = var.node_count
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Outputs (erst moeglich, wenn die Resource oben existiert)
+# ---------------------------------------------------------------------------
+output "cluster_id" {
+  description = "UUID des Clusters"
+  value       = digitalocean_kubernetes_cluster.main.id
+}
+
+output "cluster_endpoint" {
+  description = "API Server Endpoint"
+  value       = digitalocean_kubernetes_cluster.main.endpoint
+}
+
+output "cluster_version" {
+  description = "Laufende Kubernetes Version"
+  value       = digitalocean_kubernetes_cluster.main.version
+}
+
+output "cluster_vpc_uuid" {
+  description = "VPC des Clusters (wird von den Managed Databases genutzt)"
+  value       = digitalocean_kubernetes_cluster.main.vpc_uuid
+}

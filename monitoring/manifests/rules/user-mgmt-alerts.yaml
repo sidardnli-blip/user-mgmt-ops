@@ -1,0 +1,104 @@
+# Aufgabe 1: eigene PrometheusRule fuer den user_mgmt_service.
+# Alle Alerts tragen das Label team="user-mgmt" -> Alertmanager routet sie
+# an den konfigurierten Benachrichtigungskanal (siehe monitoring/values.yaml).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: user-mgmt-service-rules
+  namespace: monitoring
+  labels:
+    app: user-mgmt
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: user-mgmt-service
+      rules:
+        # --- Fehlerzustand 1: zu viele Serverfehler ---------------------------
+        - alert: UserMgmtServiceHighErrorRate
+          expr: |
+            100
+            * sum by (namespace) (rate(http_server_requests_seconds_count{job="backend", status=~"5.."}[5m]))
+            / clamp_min(sum by (namespace) (rate(http_server_requests_seconds_count{job="backend"}[5m])), 0.001)
+            > 5
+          for: 2m
+          labels:
+            severity: critical
+            team: user-mgmt
+          annotations:
+            summary: "user_mgmt_service liefert zu viele Serverfehler"
+            description: "Fehlerquote {{ $value | printf \"%.1f\" }}% (Schwelle 5%) im Namespace {{ $labels.namespace }}."
+
+        # --- Fehlerzustand 2: Antwortzeiten zu hoch --------------------------
+        - alert: UserMgmtServiceHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (namespace, le) (rate(http_server_requests_seconds_bucket{job="backend", uri!~"/actuator.*"}[5m]))
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+            team: user-mgmt
+          annotations:
+            summary: "user_mgmt_service antwortet langsam"
+            description: "95. Perzentil der Antwortzeit liegt bei {{ $value | printf \"%.2f\" }}s (Schwelle 1s) im Namespace {{ $labels.namespace }}."
+
+        # --- Fehlerzustand 3: Modulzuweisung faellt aus (Aufgabe 6) ----------
+        # Fachlich wichtig: der Circuit Breaker ist offen, es koennen KEINE
+        # Module mehr zugewiesen werden, obwohl der Service selbst laeuft.
+        - alert: ModuleAssignmentUnavailable
+          expr: resilience4j_circuitbreaker_state{job="backend", name="moduleService", state="open"} == 1
+          for: 1m
+          labels:
+            severity: critical
+            team: user-mgmt
+          annotations:
+            summary: "Modulzuweisung nicht moeglich (Circuit Breaker offen)"
+            description: "Der Circuit Breaker zum module_service ist offen. Namespace {{ $labels.namespace }}, Pod {{ $labels.pod }}."
+
+        - alert: ModuleAssignmentErrors
+          expr: sum by (namespace) (rate(module_assignment_requests_total{result="service_unavailable"}[5m])) > 0
+          for: 2m
+          labels:
+            severity: warning
+            team: user-mgmt
+          annotations:
+            summary: "Modulzuweisungen schlagen fehl"
+            description: "Im Namespace {{ $labels.namespace }} schlagen Modulzuweisungen fehl, weil der module_service nicht erreichbar ist."
+
+        # --- Fehlerzustand 4: gar keine lauffaehige Replica ------------------
+        - alert: UserMgmtServiceNoAvailableReplicas
+          expr: kube_deployment_status_replicas_available{namespace=~"user-mgmt.*", deployment="backend"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            team: user-mgmt
+          annotations:
+            summary: "user_mgmt_service hat keine verfuegbare Replica"
+            description: "Deployment backend im Namespace {{ $labels.namespace }} hat 0 verfuegbare Pods."
+
+    - name: module-service
+      rules:
+        - alert: ModuleServiceHighErrorRate
+          expr: |
+            100
+            * sum by (namespace) (rate(http_requests_total{job="module-service", status=~"5.."}[5m]))
+            / clamp_min(sum by (namespace) (rate(http_requests_total{job="module-service"}[5m])), 0.001)
+            > 5
+          for: 2m
+          labels:
+            severity: warning
+            team: user-mgmt
+          annotations:
+            summary: "module_service liefert zu viele Serverfehler"
+            description: "Fehlerquote {{ $value | printf \"%.1f\" }}% im Namespace {{ $labels.namespace }}."
+
+        - alert: ModuleServiceDown
+          expr: up{job="module-service"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            team: user-mgmt
+          annotations:
+            summary: "module_service ist nicht erreichbar"
+            description: "Prometheus kann {{ $labels.pod }} im Namespace {{ $labels.namespace }} nicht mehr scrapen."

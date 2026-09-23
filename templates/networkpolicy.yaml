@@ -9,7 +9,17 @@ spec:
     - Ingress
   ingress:
     - from:
+        # Pods im selben Namespace (z.B. user_mgmt_service -> module_service)
         - podSelector: {}
+        # Ingress Controller
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ingress-nginx
+        # Prometheus muss die Metriken scrapen duerfen (Aufgabe 1)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.monitoring.namespace }}
+        # k6 Lasttests (Aufgabe 2)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.loadtest.namespace }}

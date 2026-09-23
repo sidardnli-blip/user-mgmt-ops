@@ -8,3 +8,16 @@ spec:
   selector:
     matchLabels:
       app: backend
+{{- if .Values.moduleService.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: module-service-pdb
+  namespace: {{ .Values.namespace }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: module-service
+{{- end }}

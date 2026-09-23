@@ -1,0 +1,47 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Kein :latest Tag
+    policies.kyverno.io/category: Sicherheit
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Images muessen eindeutig versioniert sein. Mit :latest ist nicht nachvollziehbar,
+      welcher Stand wirklich laeuft, und ein Rollback ist nicht moeglich. Die Pipeline
+      taggt jedes Image mit dem Git Short SHA.
+spec:
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - user-mgmt
+                - user-mgmt-*
+      validate:
+        failureAction: Enforce
+        message: "Das Image muss einen expliziten Tag haben (image:tag)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+    - name: disallow-latest-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - user-mgmt
+                - user-mgmt-*
+      validate:
+        failureAction: Enforce
+        message: "Der Tag :latest ist nicht erlaubt, bitte eine feste Version verwenden."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"

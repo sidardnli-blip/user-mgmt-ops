@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: backend
   namespace: {{ .Values.namespace }}
+  labels:
+    app: backend
 spec:
   replicas: {{ .Values.replicaCount.backend }}
   strategy:
@@ -22,38 +24,67 @@ spec:
         - name: backend
           image: {{ .Values.images.backend }}
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 8081
           envFrom:
             - configMapRef:
                 name: app-config
             - secretRef:
                 name: app-secrets
+            # Zugangsdaten der DigitalOcean Managed PostgreSQL (von Terraform erzeugt)
+            - secretRef:
+                name: {{ .Values.database.secretName }}
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=60"
           resources:
             requests:
-              cpu: "250m"
-              memory: "256Mi"
+              cpu: {{ .Values.resources.backend.requests.cpu | quote }}
+              memory: {{ .Values.resources.backend.requests.memory | quote }}
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: {{ .Values.resources.backend.limits.cpu | quote }}
+              memory: {{ .Values.resources.backend.limits.memory | quote }}
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
+            periodSeconds: 5
+            failureThreshold: 36
           readinessProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 20
-            periodSeconds: 10
+            httpGet:
+              path: /actuator/health/readiness
+              port: management
+            periodSeconds: 5
+            failureThreshold: 3
           livenessProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 30
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
             periodSeconds: 15
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            capabilities:
+              drop:
+                - ALL
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
   namespace: {{ .Values.namespace }}
+  labels:
+    app: backend
 spec:
   selector:
     app: backend
   ports:
-    - port: 8080
-      targetPort: 8080
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: management
+      port: 8081
+      targetPort: management
