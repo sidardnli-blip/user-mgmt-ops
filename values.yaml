@@ -2,15 +2,15 @@ namespace: user-mgmt
 
 images:
   # Die beiden Tags werden von der GitHub-Actions-Pipeline automatisch gesetzt
-  backend: sidardenli/user-mgmt-service:5b725f5
-  moduleService: sidardenli/module-service:0.1.0
+  backend: sidardenli/user-mgmt-service:e88e3c5
+  moduleService: sidardenli/module-service:238728e
   # Frontend wird manuell getaggt (kein :latest -> Kyverno Policy disallow-latest-tag)
   frontend: sidardenli/auth_portal:1.0.0
 
 replicaCount:
-  backend: 1
+  backend: sidardenli/user-mgmt-service:e88e3c5
   frontend: 1
-  moduleService: 2
+  moduleService: sidardenli/module-service:238728e
 
 # Aufgabe 6: Python Microservice
 moduleService:
