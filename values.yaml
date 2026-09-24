@@ -17,10 +17,10 @@ moduleService:
   resources:
     requests:
       cpu: "100m"
-      memory: "192Mi"
+      memory: "256Mi"
     limits:
       cpu: "500m"
-      memory: "384Mi"
+      memory: "512Mi"
 # Aufgabe 4: Zugangsdaten der Managed Databases kommen aus Terraform
 # und liegen als Kubernetes Secret im Namespace (nicht im Git!).
 database:
