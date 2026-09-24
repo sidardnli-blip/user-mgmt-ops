@@ -1,7 +1,7 @@
 namespace: user-mgmt
 images:
   # Die beiden Tags werden von der GitHub-Actions-Pipeline automatisch gesetzt
-  backend: sidardenli/user-mgmt-service:265ad61
+  backend: sidardenli/user-mgmt-service:494b9a5
   moduleService: sidardenli/module-service:238728e
   # Frontend wird manuell getaggt (kein :latest -> Kyverno Policy disallow-latest-tag)
   frontend: sidardenli/auth_portal:1.0.0
