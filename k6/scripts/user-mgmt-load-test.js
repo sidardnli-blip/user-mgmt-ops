@@ -13,10 +13,10 @@ const PASSWORD = 'k6-load-test-1234';
 export const options = {
   // Stufenweise steigende Last, danach wieder runter -> HPA skaliert hoch und runter
     stages: [
-    { duration: '1m', target: 8 },
-    { duration: '2m', target: 20 },
-    { duration: '3m', target: 30 },
-    { duration: '2m', target: 30 },
+    { duration: '1m', target: 3 },
+    { duration: '2m', target: 6 },
+    { duration: '3m', target: 8 },
+    { duration: '2m', target: 8 },
     { duration: '2m', target: 0 },
   ],
   thresholds: {
@@ -68,5 +68,5 @@ export default function (data) {
   const all = http.get(`${BASE}/api/users`, params);
   check(all, { 'GET /users ist 200': (r) => r.status === 200 });
 
-  sleep(0.8);
+  sleep(1.5);
 }
